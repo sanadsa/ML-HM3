@@ -1,9 +1,8 @@
-# Name of student #1:
-# ID of  student #1:
+# Name of student #1: Sanad Satel
+# ID of  student #1: 208946533
 
-# Name of student #2:
-# ID of  student #2:
-
+# Name of student #2: Yaakov Kourdi
+# ID of  student #2: 311400238
 
 # Download the "Titanic - Machine Learning from Disaster" dataset, either from Kaggle (registration required) or from the course's website
 # https://www.kaggle.com/competitions/titanic/
@@ -54,9 +53,7 @@ def load_train_data():
 def disp_some_data(df_train):
 
     #! your code here
-    # df_train...
-    
-    return
+    print(df_train[:10])
 
 ## 1.3. 
 ## In order to know what to do with which columns, we must know what types are there, and how many different values are there for each.
@@ -66,12 +63,15 @@ def display_column_data(df_train, max_vals = 10):
     First, let's investigate the columns in the dataset columns, using the .info() command. For now, we'll deal just with int, float and strings.
     Note that "object" is for string
     '''
+    print('df_train.info():')
     df_train.info()
+    print('df_train.info():')
     # df_train.<your code here>
     
     '''
     Let's count the number of unique values per column:
     '''
+    print('df_train.nunique():')
     num_uq_vals_sr = df_train.nunique()
     print(num_uq_vals_sr)
 
@@ -80,7 +80,7 @@ def display_column_data(df_train, max_vals = 10):
     Its values are the number of unique values for each column. For "Sex", for example, it is 2. For "Pclass", it is 3 - 3 classes of passengers.
     It discards NaN's by default. You can count NaN's as well with: df_train.nunique(dropna=False). Try it!
     '''
-
+    print(df_train.nunique(dropna=False))
     '''
     For columns that have less than max_vals values, print the number of occurrences of each value
     '''
@@ -102,7 +102,7 @@ def display_column_data(df_train, max_vals = 10):
 def drop_non_inform_columns(df_train):
 
     #! your code here, store your results in df_lean
-    df_lean = <your code here>
+    df_lean = df_train.drop(columns=['PassengerId', 'Name', 'Ticket', 'Cabin'])
 
     return df_lean
 
@@ -120,9 +120,9 @@ def where_are_the_nans(df_lean):
     #!
     #! cols_with_nans = {'col_1': 20, 'col_5': 1, 'col_4': 13}
     #! DO NOT include columns with 0 NaN's - columns without missing values.
-
+    missing_values = df_lean.isna().sum()
+    cols_with_nans = missing_values[missing_values > 0].to_dict()
     print(cols_with_nans)
-
 
     return cols_with_nans
 
@@ -130,15 +130,16 @@ def where_are_the_nans(df_lean):
 ## We see that the columns 'Age' and 'Embarked' have missing values. We need to fill them. 
 ## Let's fill 'Age' with the average and 'Embarked' with the most common
 def fill_titanic_nas(df_lean):
-
     '''
     For "Embarked", consider using value_counts() to get (again) the value counts, 
     and idxmax() on that result - to get the index in of the maximal value value_counts() - that is most common value in "Embarked"
     '''
-
     #! your code here
-    df_filled = <your code here>
-
+    df_filled = df_lean.copy()
+    average_age = df_filled['Age'].mean()
+    df_filled['Age'].fillna(average_age, inplace=True)
+    most_common_embarked = df_filled['Embarked'].value_counts().idxmax()
+    df_filled['Embarked'].fillna(most_common_embarked, inplace=True)
 
     return df_filled
 
@@ -205,13 +206,14 @@ def encode_one_hot(df_filled):
     # ****************************
 
     
-
-
     #! your code here. Hint: you are strongly encouraged to use pd.get_dummies(...) function and then rename the columns. 
-    df_one_hot = <your code here>
+    embarked_encoded = pd.get_dummies(df_filled['Embarked'], prefix='Emb').astype(int)
+    pclass_encoded = pd.get_dummies(df_filled['Pclass'], prefix='Cls').astype(int)
     
-    
+    df_one_hot = pd.concat([df_filled, embarked_encoded, pclass_encoded], axis=1)   
 
+    sex_mapping = {'male': 1, 'female': 0}
+    df_one_hot['Bin_Sex'] = df_one_hot['Sex'].map(sex_mapping)
     # *** NOTE ***: after encoding by one-hot, we may delete the original columns, although it is not necessery. 
     
 
@@ -231,7 +233,7 @@ def make_family(df_one_hot):
     '''
 
     #! your code here
-    df_one_hot['Family'] = <your code here>
+    df_one_hot['Family'] = df_one_hot['SibSp'] + df_one_hot['Parch']
 
     return df_one_hot
 
@@ -275,7 +277,7 @@ def survival_vs_gender(df):
 
     #! your code here
     #! Return the result in a dict or a series. Your keys for dict / index for Series should be the strings "male", "female"
-    survived_by_gender = {"male": <your code here>, "female": <your code here>}
+    # survived_by_gender = {"male": <your code here>, "female": <your code here>}
 
     print(survived_by_gender)
 
@@ -289,7 +291,7 @@ def survival_vs_class(df):
     #! Return the result in a dict or a series. Your keys for dict / index for Series should be the strings "Cls_1", "Cls_2", "Cls_3"
     # For instance: survived_by_class = {"Cls_1": .25, "Cls_2": .35, "Cls_3": .45}
     
-    survived_by_class = {"Cls_1": <your code here>, "Cls_2": <your code here>, "Cls_3": <your code here>}
+    # survived_by_class = {"Cls_1": <your code here>, "Cls_2": <your code here>, "Cls_3": <your code here>}
     print(survived_by_class)
 
     return survived_by_class
@@ -307,7 +309,7 @@ def survival_vs_family(df):
     for metric in ["SibSp", "Parch", "Family"]:
 
         #! your code here
-        survived_by_metric = {  <your code here>:  <your code here> }
+        # survived_by_metric = {  <your code here>:  <your code here> }
         
         # Example for survived_by_metric:
         # survived_by_metric = {0: 0.2, 1: 0.3, 2: 0.35, 4: 0.5...}
@@ -325,11 +327,11 @@ def survival_vs_family(df):
       #! Complete the following print statement after inspecting the reuslts
       
       #! your code here
-      print("To ensure the highest chance of survival, the metric ", <your code here>, 
-            'must have the value ', <your code here> )
+    #   print("To ensure the highest chance of survival, the metric ", <your code here>, 
+    #         'must have the value ', <your code here> )
         
        
-      return survived_by_family
+    #   return survived_by_family
 
 
 ## 3.4 Visualizing the distribution of age and its impact on survival 
@@ -421,7 +423,7 @@ def survival_correlations(df):
     #! your code here
     #! find the 5 most important numerical columns, and print (with sign) and return their correlation. Use dict or Series
     important_feats = ...
-    important_corrs = {'a': 0.9, 'b': -0.8, ...}
+    # important_corrs = {'a': 0.9, 'b': -0.8, ...}
     
     print(important_corrs)
     
@@ -500,9 +502,9 @@ def train_logistic_regression(X_train, X_test, y_train, y_test):
     '''
 
     #! your code here
-    conf_matrix =  <your code here>
-    accuracy =  <your code here>
-    f1_score =  <your code here>
+    # conf_matrix =  <your code here>
+    # accuracy =  <your code here>
+    # f1_score =  <your code here>
 
     print('acc: ', accuracy, 'f1: ', f1_score)
     print('confusion matrix:\n', conf_matrix)
@@ -510,18 +512,12 @@ def train_logistic_regression(X_train, X_test, y_train, y_test):
     return accuracy, f1_score, conf_matrix
 
 
-
-    
-    
-    
-
-
-if __name__ == '__main__':
-  
+# if __name__ == '__main__':
+def main():  
     # an example of the usage of the functions
 
     df_train = load_train_data()
-    disp_some_data(df_train)
+    # disp_some_data(df_train)
     display_column_data(df_train, max_vals = 10)
     df_lean = drop_non_inform_columns(df_train)
     
@@ -530,17 +526,19 @@ if __name__ == '__main__':
     df_one_hot = encode_one_hot(df_filled)
     df_one_hot = make_family(df_one_hot)
     df_one_hot = add_log1p(df_one_hot)
+    print(df_one_hot)
  
-    survived_by_gender = survival_vs_gender(df_one_hot)
-    survived_by_class = survival_vs_class(df_one_hot)
-    survived_by_family = survival_vs_family(df_one_hot)
-    survival_vs_age(df_one_hot)
-    important_corrs = survival_correlations(df)
+    # survived_by_gender = survival_vs_gender(df_one_hot)
+    # survived_by_class = survival_vs_class(df_one_hot)
+    # survived_by_family = survival_vs_family(df_one_hot)
+    # survival_vs_age(df_one_hot)
+    # important_corrs = survival_correlations(df)
     
-    X_train, X_test, y_train, y_test = split_data(df_one_hot)
-    train_logistic_regression(X_train, X_test, y_train, y_test)
+    # X_train, X_test, y_train, y_test = split_data(df_one_hot)
+    # train_logistic_regression(X_train, X_test, y_train, y_test)
 
     
+main()
 
 
 
