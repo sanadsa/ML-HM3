@@ -107,7 +107,6 @@ def drop_non_inform_columns(df_train):
     return df_lean
 
 
-
 # 2. 
 # Now that we know the basics about our dataset, we can start cleaning & transforming it towards enabling prediction of survival
 
@@ -277,7 +276,9 @@ def survival_vs_gender(df):
 
     #! your code here
     #! Return the result in a dict or a series. Your keys for dict / index for Series should be the strings "male", "female"
-    # survived_by_gender = {"male": <your code here>, "female": <your code here>}
+    # survived_by_gender = {"male": df_male["Survived"].mean(), "female": df_female["Survived"].mean()}
+
+    survived_by_gender = df.groupby('Sex')['Survived'].mean()
 
     print(survived_by_gender)
 
@@ -290,8 +291,11 @@ def survival_vs_class(df):
     #! your code here
     #! Return the result in a dict or a series. Your keys for dict / index for Series should be the strings "Cls_1", "Cls_2", "Cls_3"
     # For instance: survived_by_class = {"Cls_1": .25, "Cls_2": .35, "Cls_3": .45}
-    
-    # survived_by_class = {"Cls_1": <your code here>, "Cls_2": <your code here>, "Cls_3": <your code here>}
+
+    df_cls1 = df[df['Pclass']==1]
+    df_cls2 = df[df['Pclass']==2]
+    df_cls3 = df[df['Pclass']==3]
+    survived_by_class = {"Cls_1": df_cls1["Survived"].mean(), "Cls_2": df_cls2["Survived"].mean(), "Cls_3": df_cls3["Survived"].mean()}
     print(survived_by_class)
 
     return survived_by_class
@@ -306,10 +310,14 @@ def survival_vs_family(df):
     
     survived_by_family = {}
 
-    for metric in ["SibSp", "Parch", "Family"]:
+    for metric in ["SibSp", "Family", "Parch"]:
 
         #! your code here
         # survived_by_metric = {  <your code here>:  <your code here> }
+        survived_by_metric = {}
+
+        for value in [0, 1, 2, 3, 4, 5, 6, 7, 10]:
+            survived_by_metric[value] = df[df[metric] == value]["Survived"].mean()
         
         # Example for survived_by_metric:
         # survived_by_metric = {0: 0.2, 1: 0.3, 2: 0.35, 4: 0.5...}
@@ -319,19 +327,15 @@ def survival_vs_family(df):
         print("Family metric: ", metric)
         print("Survival stats:")
         print(survived_by_metric)
-        
         survived_by_family[metric] = survived_by_metric
-        
-        
-      #! What survival metric with what value ensures the highest probability of survival?
-      #! Complete the following print statement after inspecting the reuslts
-      
-      #! your code here
-    #   print("To ensure the highest chance of survival, the metric ", <your code here>, 
-    #         'must have the value ', <your code here> )
-        
+          
+        #! What survival metric with what value ensures the highest probability of survival?
+        #! Complete the following print statement after inspecting the reuslts
+        #! your code here
+        print("To ensure the highest chance of survival, the metric", metric,
+            "must have the value ", max(survived_by_metric, key=survived_by_metric.get))
        
-    #   return survived_by_family
+    return survived_by_family
 
 
 ## 3.4 Visualizing the distribution of age and its impact on survival 
@@ -369,8 +373,6 @@ def survival_vs_age(df):
     plt.clear('abc') # clears the figure "abc", leaving it empty and active to recieve plots
     plt.plot(...)
     df[...].hist()
-
-    
     Now, back to age histogram (distributions)
     First, define the histogram edges
 
@@ -381,7 +383,7 @@ def survival_vs_age(df):
     We can plot a histogram of any column of numerical values by the "hist" method of DataFrame
     '''
 
-    plt.close('Age, all')
+    # plt.close('Age, all')
     plt.figure('Age, all')
     df['Age'].hist(bins=bins)
 
@@ -393,14 +395,124 @@ def survival_vs_age(df):
     Try it! 
 
     '''
-
     #! your code here
     #! plot 2 histograms of age: one for those who survived, and one for those that did not
+    plt.close('Age, survived')
+    plt.figure('Age, survived')
+    df[df['Survived']==1]['Age'].hist(bins=bins)
+    plt.close('Age, not survived')
+    plt.figure('Age, not survived')
+    df[df['Survived']==0]['Age'].hist(bins=bins)
+
+    plt.show()
+
     #! Bonus 1: plot 4 histograms of age: for women that survived and not, and for men tat survived and not
-    #! Bonus 2: plot 6 histograms of age: for survivors and casualties of each of the 3 classes
+    plt.close('Age, women survived')
+    plt.figure('Age, women survived')
+    df[(df['Survived']==1) & (df['Sex']=='female')]['Age'].hist(bins=bins)
+    plt.close('Age, men survived')
+    plt.figure('Age, men survived')
+    df[(df['Survived']==1) & (df['Sex']=='male')]['Age'].hist(bins=bins)
+    plt.close('Age, women not survived')
+    plt.figure('Age, women not survived')
+    df[(df['Survived']==0) & (df['Sex']=='female')]['Age'].hist(bins=bins)
+    plt.close('Age, men not survived')
+    plt.figure('Age, men not survived')
+    df[(df['Survived']==0) & (df['Sex']=='male')]['Age'].hist(bins=bins)
     
+    #! Bonus 2: plot 6 histograms of age: for survivors and casualties of each of the 3 classes
+    plt.close('Age, class 1 survived')
+    plt.figure('Age, class 1 survived')
+    df[(df['Survived']==1) & (df['Pclass']==1)]['Age'].hist(bins=bins)
+
+    plt.close('Age, class 2 survived')
+    plt.figure('Age, class 2 survived')
+    df[(df['Survived']==1) & (df['Pclass']==2)]['Age'].hist(bins=bins)
+
+    plt.close('Age, class 3 survived')
+    plt.figure('Age, class 3 survived')
+    df[(df['Survived']==1) & (df['Pclass']==3)]['Age'].hist(bins=bins)
+
+    plt.close('Age, class 1 not survived')
+    plt.figure('Age, class 1 not survived')
+    df[(df['Survived']==0) & (df['Pclass']==1)]['Age'].hist(bins=bins)
+
+    plt.close('Age, class 2 not survived')
+    plt.figure('Age, class 2 not survived')
+    df[(df['Survived']==0) & (df['Pclass']==2)]['Age'].hist(bins=bins)
+
+    plt.close('Age, class 3 not survived')
+    plt.figure('Age, class 3 not survived')
+    df[(df['Survived']==0) & (df['Pclass']==3)]['Age'].hist(bins=bins)
+
     return
 
+    x = [1,2,3]
+    y = [5,6,7]
+
+    fig = plt.figure()
+    plt.plot(x, y)
+    plt.show()
+
+    return
+    # bins = 'auto'
+
+    # plt.figure('Age, all')
+    # df['Age'].hist(bins=bins)
+    # plt.show()
+
+    # # Plotting histograms for survivors and non-survivors
+    # plt.figure('Age, survived')
+    # df[df['Survived']==1]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, not survived')
+    # df[df['Survived']==0]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # Bonus 1: Plotting histograms for women and men who survived and did not survive
+    # plt.figure('Age, women survived')
+    # df[(df['Survived']==1) & (df['Sex']=='female')]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, men survived')
+    # df[(df['Survived']==1) & (df['Sex']=='male')]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, women not survived')
+    # df[(df['Survived']==0) & (df['Sex']=='female')]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, men not survived')
+    # df[(df['Survived']==0) & (df['Sex']=='male')]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # # Bonus 2: Plotting histograms for survivors and casualties of each passenger class
+    # plt.figure('Age, class 1 survived')
+    # df[(df['Survived']==1) & (df['Pclass']==1)]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, class 2 survived')
+    # df[(df['Survived']==1) & (df['Pclass']==2)]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, class 3 survived')
+    # df[(df['Survived']==1) & (df['Pclass']==3)]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, class 1 not survived')
+    # df[(df['Survived']==0) & (df['Pclass']==1)]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, class 2 not survived')
+    # df[(df['Survived']==0) & (df['Pclass']==2)]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # plt.figure('Age, class 3 not survived')
+    # df[(df['Survived']==0) & (df['Pclass']==3)]['Age'].hist(bins=bins)
+    # plt.show()
+
+    # return
 
 ## 3.5 Correlation of survival to the numerical variables
 # ['Age', 'SibSp', 'Parch', 'Fare', 'Family']
@@ -412,9 +524,12 @@ def survival_correlations(df):
 
     '''
 
-    corr = df.corr()
+    # converting 'sex' and 'embarked' into binary columns to be able to use the corr function
+    df_encoded = pd.get_dummies(df, columns=['Sex', 'Embarked'], drop_first=True)
+    corr = df_encoded.corr()
 
     # corr is a DataFrame that represents the correlatio matrix
+    print('corr************************************')
     print(corr)
 
     # we need only the correlation to the "Survived" column. Also, we don't need the correlation of "Survived" to itself.
@@ -422,8 +537,11 @@ def survival_correlations(df):
 
     #! your code here
     #! find the 5 most important numerical columns, and print (with sign) and return their correlation. Use dict or Series
-    important_feats = ...
-    # important_corrs = {'a': 0.9, 'b': -0.8, ...}
+    important_feats = ['Age', 'SibSp', 'Parch', 'Fare', 'Family']
+    important_corrs = corr['Survived'][important_feats]
+    important_corrs = important_corrs.sort_values(ascending=False)
+
+    important_corrs = {feat: important_corrs[feat] for feat in important_feats}
     
     print(important_corrs)
     
@@ -442,20 +560,14 @@ def survival_correlations(df):
 
 ## 4.1 split data into train and test sets
 def split_data(df_one_hot):
-
-
-
     from sklearn.model_selection import train_test_split
 
     Y = df_one_hot['Survived']
     X = df_one_hot.drop(['Survived'], axis = 1)
 
-
-
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3, random_state=1, stratify = Y)
 
     # This splits the data into a train set, which will be used to calibrate the internal parameters of predictor, and the test set, which will be used for checking
-
     print(X_train.shape)
     print(y_train.shape)
     print(X_test.shape)
@@ -466,8 +578,6 @@ def split_data(df_one_hot):
 
 ## 4.2 Training and testing!
 def train_logistic_regression(X_train, X_test, y_train, y_test):
-
-
     from sklearn.model_selection import GridSearchCV
     from sklearn.linear_model import LogisticRegression
 
@@ -502,9 +612,15 @@ def train_logistic_regression(X_train, X_test, y_train, y_test):
     '''
 
     #! your code here
+    from sklearn.metrics import confusion_matrix
     # conf_matrix =  <your code here>
+    conf_matrix = confusion_matrix(y_test, y_test_logistic)
     # accuracy =  <your code here>
+    from sklearn.metrics import accuracy_score
+    accuracy = accuracy_score(y_test, y_test_logistic)
     # f1_score =  <your code here>
+    from sklearn.metrics import f1_score
+    f1_score = f1_score(y_test, y_test_logistic)
 
     print('acc: ', accuracy, 'f1: ', f1_score)
     print('confusion matrix:\n', conf_matrix)
@@ -526,13 +642,12 @@ def main():
     df_one_hot = encode_one_hot(df_filled)
     df_one_hot = make_family(df_one_hot)
     df_one_hot = add_log1p(df_one_hot)
-    print(df_one_hot)
  
-    # survived_by_gender = survival_vs_gender(df_one_hot)
-    # survived_by_class = survival_vs_class(df_one_hot)
-    # survived_by_family = survival_vs_family(df_one_hot)
+    survived_by_gender = survival_vs_gender(df_one_hot)
+    survived_by_class = survival_vs_class(df_one_hot)
+    survived_by_family = survival_vs_family(df_one_hot)
     # survival_vs_age(df_one_hot)
-    # important_corrs = survival_correlations(df)
+    important_corrs = survival_correlations(df_one_hot)
     
     # X_train, X_test, y_train, y_test = split_data(df_one_hot)
     # train_logistic_regression(X_train, X_test, y_train, y_test)
