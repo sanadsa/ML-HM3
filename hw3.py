@@ -35,7 +35,6 @@ plt.ion()
 
 
 
-
 # 1. 
 # Familiarization. Download the dataset from the course's website to your pc / colab, and load it
 
@@ -63,15 +62,12 @@ def display_column_data(df_train, max_vals = 10):
     First, let's investigate the columns in the dataset columns, using the .info() command. For now, we'll deal just with int, float and strings.
     Note that "object" is for string
     '''
-    print('df_train.info():')
     df_train.info()
-    print('df_train.info():')
     # df_train.<your code here>
     
     '''
     Let's count the number of unique values per column:
     '''
-    print('df_train.nunique():')
     num_uq_vals_sr = df_train.nunique()
     print(num_uq_vals_sr)
 
@@ -447,73 +443,6 @@ def survival_vs_age(df):
 
     return
 
-    x = [1,2,3]
-    y = [5,6,7]
-
-    fig = plt.figure()
-    plt.plot(x, y)
-    plt.show()
-
-    return
-    # bins = 'auto'
-
-    # plt.figure('Age, all')
-    # df['Age'].hist(bins=bins)
-    # plt.show()
-
-    # # Plotting histograms for survivors and non-survivors
-    # plt.figure('Age, survived')
-    # df[df['Survived']==1]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, not survived')
-    # df[df['Survived']==0]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # Bonus 1: Plotting histograms for women and men who survived and did not survive
-    # plt.figure('Age, women survived')
-    # df[(df['Survived']==1) & (df['Sex']=='female')]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, men survived')
-    # df[(df['Survived']==1) & (df['Sex']=='male')]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, women not survived')
-    # df[(df['Survived']==0) & (df['Sex']=='female')]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, men not survived')
-    # df[(df['Survived']==0) & (df['Sex']=='male')]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # # Bonus 2: Plotting histograms for survivors and casualties of each passenger class
-    # plt.figure('Age, class 1 survived')
-    # df[(df['Survived']==1) & (df['Pclass']==1)]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, class 2 survived')
-    # df[(df['Survived']==1) & (df['Pclass']==2)]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, class 3 survived')
-    # df[(df['Survived']==1) & (df['Pclass']==3)]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, class 1 not survived')
-    # df[(df['Survived']==0) & (df['Pclass']==1)]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, class 2 not survived')
-    # df[(df['Survived']==0) & (df['Pclass']==2)]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # plt.figure('Age, class 3 not survived')
-    # df[(df['Survived']==0) & (df['Pclass']==3)]['Age'].hist(bins=bins)
-    # plt.show()
-
-    # return
-
 ## 3.5 Correlation of survival to the numerical variables
 # ['Age', 'SibSp', 'Parch', 'Fare', 'Family']
 # ['log1p_Age', 'log1p_SibSp', 'log1p_Parch', 'log1p_Fare', 'log1p_Family']
@@ -562,8 +491,14 @@ def survival_correlations(df):
 def split_data(df_one_hot):
     from sklearn.model_selection import train_test_split
 
+    # numeric_features = ['Age', 'SibSp', 'Parch', 'Fare', 'log1p_Age', 'log1p_SibSp', 'log1p_Parch', 'log1p_Fare', 'log1p_Family']
+    # correlations = df_one_hot[numeric_features + ['Survived']].corr()
+    # corrr = correlations['Survived'].abs().sort_values(ascending=False)
+    # print(corrr)
+
     Y = df_one_hot['Survived']
-    X = df_one_hot.drop(['Survived'], axis = 1)
+    df_encoded = pd.get_dummies(df_one_hot, columns=['Sex', 'Embarked'], drop_first=True)
+    X = df_encoded.drop(columns=['Survived', 'log1p_SibSp', 'SibSp', 'Age', 'Parch'], axis = 1)
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3, random_state=1, stratify = Y)
 
@@ -580,6 +515,9 @@ def split_data(df_one_hot):
 def train_logistic_regression(X_train, X_test, y_train, y_test):
     from sklearn.model_selection import GridSearchCV
     from sklearn.linear_model import LogisticRegression
+    import warnings 
+    from sklearn.exceptions import ConvergenceWarning
+    warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
     para_grid = {'C' : [0.001, 0.01, 0.1, 1, 10 ,50], # internal regularization parameter of LogisticRegression
                  'solver' : ['sag', 'saga']}
@@ -613,13 +551,11 @@ def train_logistic_regression(X_train, X_test, y_train, y_test):
 
     #! your code here
     from sklearn.metrics import confusion_matrix
-    # conf_matrix =  <your code here>
-    conf_matrix = confusion_matrix(y_test, y_test_logistic)
-    # accuracy =  <your code here>
     from sklearn.metrics import accuracy_score
-    accuracy = accuracy_score(y_test, y_test_logistic)
-    # f1_score =  <your code here>
     from sklearn.metrics import f1_score
+
+    conf_matrix = confusion_matrix(y_test, y_test_logistic)
+    accuracy = accuracy_score(y_test, y_test_logistic)
     f1_score = f1_score(y_test, y_test_logistic)
 
     print('acc: ', accuracy, 'f1: ', f1_score)
@@ -646,11 +582,11 @@ def main():
     survived_by_gender = survival_vs_gender(df_one_hot)
     survived_by_class = survival_vs_class(df_one_hot)
     survived_by_family = survival_vs_family(df_one_hot)
-    # survival_vs_age(df_one_hot)
+    survival_vs_age(df_one_hot)
     important_corrs = survival_correlations(df_one_hot)
     
-    # X_train, X_test, y_train, y_test = split_data(df_one_hot)
-    # train_logistic_regression(X_train, X_test, y_train, y_test)
+    X_train, X_test, y_train, y_test = split_data(df_one_hot)
+    train_logistic_regression(X_train, X_test, y_train, y_test)
 
     
 main()
